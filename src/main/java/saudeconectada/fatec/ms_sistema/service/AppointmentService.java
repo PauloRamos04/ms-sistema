@@ -26,8 +26,9 @@ public class AppointmentService {
 
     private final List<AppointmentDTO> appointments = new ArrayList<>();
 
-    public void agendar(AppointmentDTO appointmentDTO){
+    public void createAppointment(String cpf, Appointment appointmentDTO){
         Appointment appointment = modelMapper.map(appointmentDTO, Appointment.class);
+        appointment.setPatientCpf(cpf);
         appointmentRepository.save(appointment);
     }
 }
