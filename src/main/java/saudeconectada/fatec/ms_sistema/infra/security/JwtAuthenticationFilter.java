@@ -1,48 +1,62 @@
 package saudeconectada.fatec.ms_sistema.infra.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final String secretKey = "seuSecretAqui";
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String token = request.getHeader("Authorization");
 
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.replace("Bearer ", "");
+        final String authorizationHeader = request.getHeader("Authorization");
 
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String token = authorizationHeader.substring(7);
             try {
-                Claims claims = Jwts.parser()
-                        .setSigningKey(secretKey)
+                Claims claims = Jwts.parserBuilder()
+                        .setSigningKey(jwtSecret.getBytes())
+                        .build()
                         .parseClaimsJws(token)
                         .getBody();
 
-                String cpf = claims.getSubject();
+                String cpf = claims.getSubject(); // O CPF deve ser o 'subject' no token JWT
 
-                // Aqui você pode associar o CPF ao contexto de segurança, se necessário
-                SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(cpf));
+                if (cpf != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Validação adicional ou chamada para recuperar dados adicionais (caso necessário)
+                    JwtAuthenticationToken authentication = new JwtAuthenticationToken(cpf, null, null);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             } catch (Exception e) {
-                // Em caso de erro, você pode invalidar a requisição
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+                // Logger pode ser utilizado aqui para registrar erros
+                System.out.println("Token inválido ou expirado: " + e.getMessage());
             }
         }
 
         filterChain.doFilter(request, response);
     }
 }
+
