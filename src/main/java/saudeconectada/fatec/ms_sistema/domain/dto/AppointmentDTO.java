@@ -1,6 +1,5 @@
 package saudeconectada.fatec.ms_sistema.domain.dto;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,4 +15,7 @@ public class AppointmentDTO {
     private LocalDateTime appointmentDate;
     private String description;
     private String status;
+    private String especialidade;
+    private String unidade;
+    private String convenio;
 }
