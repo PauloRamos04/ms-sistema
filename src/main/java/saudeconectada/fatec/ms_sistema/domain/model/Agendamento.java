@@ -24,11 +24,11 @@ public class Agendamento {
 
     private String convenio;
 
-    @ManyToOne // Relação com a Especialidade
+    @ManyToOne
     @JoinColumn(name = "especialidade_id")
     private Especialidade especialidade;
 
-    @ManyToOne // Relação com a Unidade
+    @ManyToOne
     @JoinColumn(name = "unidade_id")
     private Unidade unidade;
 }
